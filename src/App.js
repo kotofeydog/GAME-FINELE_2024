@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import "./App.css"
 import image1 from './images/image1.jpg';
 import image2 from './images/image2.jpg';
-import './App.css';
 const MAX_LIVES = 3;
 const MAX_ROUNDS = 10;
 const ROUND_DURATION_SECONDS = 10;
@@ -17,26 +17,40 @@ const positions = [
 const images = [image1, image2];
 
 function Game() {
-  const [score, setScore] = useState(
-    parseInt(localStorage.getItem('score')) || 0
-  );
-  const [lives, setLives] = useState(
-    parseInt(localStorage.getItem('lives')) || MAX_LIVES
-  );
-  const [roundsCompleted, setRoundsCompleted] = useState(
-    parseInt(localStorage.getItem('roundsCompleted')) || 0
-  );
-  const [currentRound, setCurrentRound] = useState(
-    parseInt(localStorage.getItem('currentRound')) || 1
-  );
+  const [score, setScore] = useState(parseInt(localStorage.getItem('score')) || 0);
+  const [lives, setLives] = useState(parseInt(localStorage.getItem('lives')) || MAX_LIVES);
+  const [roundsCompleted, setRoundsCompleted] = useState(parseInt(localStorage.getItem('roundsCompleted')) || 0);
+  const [currentRound, setCurrentRound] = useState(parseInt(localStorage.getItem('currentRound')) || 1);
   const [gameOver, setGameOver] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [roundOver, setRoundOver] = useState(false);
   const [positionIndex, setPositionIndex] = useState(0);
-  const [targetScore, setTargetScore] = useState(
-    parseInt(localStorage.getItem('targetScore')) || 10
-  );
+  const [targetScore, setTargetScore] = useState(parseInt(localStorage.getItem('targetScore')) || 10);
   const [paused, setPaused] = useState(false);
+  // const [gameStarted, setGameStarted] = useState(false);
+  // const [timeElapsed, setTimeElapsed] = useState(0);
+
+  const startNextRound = () => {
+    if (currentRound < MAX_ROUNDS) {
+      setCurrentRound(currentRound + 1);
+      setScore(0);
+      setLives(MAX_LIVES);
+      setTargetScore(10); // Сбрасываем количество баллов до начального значения для нового раунда
+      startRoundTimer();
+    } else {
+      setGameOver(true);
+    }
+  };
+
+  useEffect(() => {
+    if (roundOver) {
+      const timer = setTimeout(() => {
+        setRoundOver(false);
+        startNextRound();
+      }, 5000); // Задержка перед запуском нового раунда
+      return () => clearTimeout(timer);
+    }
+  }, [roundOver]);
 
   useEffect(() => {
     localStorage.setItem('score', score);
@@ -100,7 +114,9 @@ function Game() {
 
   useEffect(() => {
     if (roundOver) {
-      const timer = setTimeout(() => {
+
+
+const timer = setTimeout(() => {
         setCurrentRound(currentRound + 1);
         setScore(0);
         setLives(MAX_LIVES);
@@ -117,7 +133,7 @@ function Game() {
         setCurrentRound(currentRound + 1);
         setScore(0);
         setLives(MAX_LIVES);
-        setTargetScore(10); // Сбрасываем количество баллов до начального значения для нового раунда
+        setTargetScore(10); // Сбрасываем количество баллов до начальногозначения для нового раунда
         startRoundTimer();
       } else {
         setGameOver(true);
@@ -135,11 +151,11 @@ function Game() {
     setPaused(!paused);
   };
 
-  const handleIncorrectClick = () => {
-    if (!paused && lives > 0) {
-      setLives(lives - 1);
-    }
-  };
+  // const handleIncorrectClick = () => {
+  //   if (!paused && lives > 0) {
+  //     setLives(lives - 1);
+  //   }
+  // };
 
   const handleSecondImageClick = () => {
     if (!paused && lives > 0 && activeImageIndex === 1) {
@@ -156,9 +172,8 @@ function Game() {
     width: '100px',
     height: '100px',
     cursor: 'pointer',
-    ...positions[positionIndex], // Используем текущую позицию картинки
+    ...positions[positionIndex] // Используем текущую позицию картинки
   };
-
   return (
     <div style={{ position: 'relative', width: '500px', height: '500px' }}>
       <h1>Приветствую! Нажимай на картинки, чтобы заработать баллы!</h1>
@@ -168,31 +183,28 @@ function Game() {
       <p>Пройденные раунды: {roundsCompleted}</p>
       {roundOver ? (
         <h2>Следующий раунд начнется через 5 секунд</h2>
-      ) : gameOver ? (
-        <h2>Игра окончена! Пройдено раундов: {roundsCompleted}</h2>
       ) : (
-        <p>Набери {targetScore} баллов, чтобы завершить этот раунд</p>
-      )}{' '}
+        gameOver ? (
+          <h2>Игра окончена! Пройдено раундов: {roundsCompleted}</h2>
+        ) : (
+          <p>Набери {targetScore} баллов, чтобы завершить этот раунд</p>
+        )
+      )}
+
       {!roundOver && !gameOver && (
         <>
           <img
             src={images[activeImageIndex]}
             alt={`Картинка ${activeImageIndex + 1}`}
             style={imgStyle}
-            onClick={
-              activeImageIndex === 1
-                ? handleSecondImageClick
-                : handleCorrectClick
-            }
+            onClick={activeImageIndex === 1 ? handleSecondImageClick : handleCorrectClick}
           />
-          <div>
-            <button className="btn" onClick={handlePause}>
-              {paused ? 'Возобновить' : 'Пауза'}
-            </button>
-          </div>
+          <button onClick={handlePause}>{paused ? 'Возобновить' : 'Пауза'}</button>
         </>
       )}
-      {gameOver && <h2>Игра окончена! Пройдено раундов: {roundsCompleted}</h2>}
+      {gameOver && (
+        <h2>Игра окончена! Пройдено раундов: {roundsCompleted}</h2>
+      )}
     </div>
   );
 }
